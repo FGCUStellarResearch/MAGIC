@@ -7,15 +7,20 @@ def MAGIC_Field_CR(ra_pos, dec_pos):
     import astropy.coordinates as coord
     from PyAstronomy import pyasl
     import matplotlib.pyplot as plt
-    from tabulate import tabulate
+    #from tabulate import tabulate
     from astropy.table import Table, Column, MaskedColumn, QTable
     from quantiphy import Quantity
     from astropy.io import ascii
     Vizier.ROW_LIMIT = -1
     result = Vizier.query_region(coord.SkyCoord(ra=ra_pos, dec=dec_pos,unit=(u.deg, u.deg),frame='icrs'),width="7d",catalog="V/125")
+    if result ==[]:
+        data=np.array([ra_pos, dec_pos, 0, 0, 0])
+        #data = data.transpose
+        return data
     t = result['V/125/obcat']
     #t.columns
     #use ALS IDs to ensure uniqueness
+
 
     ALS0 = np.array(t['ALS'])
     ra = np.array(t['RAJ2000'])
@@ -36,10 +41,40 @@ def MAGIC_Field_CR(ra_pos, dec_pos):
     #bmag = np.zeros(200)
     for ii in range(len(ALS0)):
         result_table = customSimbad.query_object('ALS'+np.array2string(ALS0[ii]))
-        vmag[ii] = np.asarray(result_table['FLUX_V'])
-        bmag[ii] = np.asarray(result_table['FLUX_B'])
-        st[ii] = str(result_table[0][11])[0:2]
+        #print(str(result_table[0][11])[0:2])
+        #print(ALS0[ii])
         
+        
+        if result_table is None:
+            print('None 2')
+            vmag[ii] = np.nan
+            bmag[ii] = np.nan
+            st[ii] = 'XX'
+        else:
+            vmag[ii] = np.asarray(result_table['FLUX_V'])
+            bmag[ii] = np.asarray(result_table['FLUX_B'])
+            st[ii] = str(result_table[0][11])[0:2]
+
+    print(bmag)
+    idx = (np.isnan(vmag))
+    print(idx)
+
+    vmag = vmag[~idx]
+    bmag = bmag[~idx]
+    st = st[~idx]
+    ra = ra[~idx]
+    dec = dec[~idx]
+
+    idx = (np.isnan(bmag))
+    print(idx)
+
+    vmag = vmag[~idx]
+    bmag = bmag[~idx]
+    st = st[~idx]
+    ra = ra[~idx]
+    dec = dec[~idx]
+
+    print(bmag)  
 
     #Start of section 4 in Jupyter notebook 
     #collect spectral type, V magnitude information for each star
@@ -109,8 +144,12 @@ def MAGIC_Field_CR(ra_pos, dec_pos):
     #plt.plot(star_temp,cr1,'.')
     #plt.show()      
     #Summed total count rates over field in both bands, as well as max local CRs in field in both bands
-    np.nansum(cr1)
-    np.nansum(cr2)
+    print(cr1)
+    tot_cr1 = np.nansum(cr1)
+    tot_cr2 = np.nansum(cr2)
+    
+    count1 = np.count_nonzero(cr1 > 100)
+    count2 = np.count_nonzero(cr2 > 100)
     #np.nanmax(cr1)
     #np.nanmax(cr2)
 
@@ -155,11 +194,16 @@ def MAGIC_Field_CR(ra_pos, dec_pos):
     #x=f"{maxcr1.value:0.03f}"
     maxcr2= np.max(v_i)
     in_cr=maxcr1+maxcr2
-    data=maxcr1,maxcr2,in_cr
-    print(data)
+    data=np.array([ra_pos, dec_pos, maxcr1,maxcr2,tot_cr1, tot_cr2, count1,count2])
+    #data = data.transpose
+    #print(data)
     #print(maxcr2)
     #data=(np.array(x,dtype=object,copy=False, order='C'))
-    np.savetxt("Datamagic3",data, fmt='%s',newline='\n')
+    #fopen = open("sample.txt", "a") 
+    #print(fopen)
+    #np.savetxt("sample.txt", data, fmt='%10.5f', newline=' ')
+    
+    #np.savetxt("Datamagic3",data, fmt='%10.5f',newline=' ')
    # data=(np.array(x,dtype=object,copy=False, order='C')
     #ascii.write(data, 'values.dat', names=['x'], overwrite=True)   
     #ascii.write(data,'values.csv',format='csv',fast_writer=False) 
@@ -173,6 +217,8 @@ def MAGIC_Field_CR(ra_pos, dec_pos):
    # print(data)
   # plt.hist(np.log10(cr1[~np.isnan(cr1)]),bins=40)
  #   return plt.hist(np.log10(cr1[~np.isnan(cr1)]),bins=40)
+ 
+    return data
     
 
 
