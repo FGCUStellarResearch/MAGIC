@@ -14,7 +14,7 @@ def MAGIC_Field_CR(ra_pos, dec_pos):
     Vizier.ROW_LIMIT = -1
     result = Vizier.query_region(coord.SkyCoord(ra=ra_pos, dec=dec_pos,unit=(u.deg, u.deg),frame='icrs'),width="7d",catalog="V/125")
     if result ==[]:
-        data=np.array([ra_pos, dec_pos, 0, 0, 0])
+        data=np.array([ra_pos, dec_pos, 0, 0, 0,0,0,0])
         #data = data.transpose
         return data
     t = result['V/125/obcat']
@@ -46,7 +46,7 @@ def MAGIC_Field_CR(ra_pos, dec_pos):
         
         
         if result_table is None:
-            print('None 2')
+            #print('None 2')
             vmag[ii] = np.nan
             bmag[ii] = np.nan
             st[ii] = 'XX'
@@ -54,10 +54,13 @@ def MAGIC_Field_CR(ra_pos, dec_pos):
             vmag[ii] = np.asarray(result_table['FLUX_V'])
             bmag[ii] = np.asarray(result_table['FLUX_B'])
             st[ii] = str(result_table[0][11])[0:2]
+            
 
-    print(bmag)
+    #print('bmag1')
+    #print(bmag)
     idx = (np.isnan(vmag))
-    print(idx)
+    #print('idx1')
+    #print(idx)
 
     vmag = vmag[~idx]
     bmag = bmag[~idx]
@@ -66,7 +69,10 @@ def MAGIC_Field_CR(ra_pos, dec_pos):
     dec = dec[~idx]
 
     idx = (np.isnan(bmag))
-    print(idx)
+    #print('idx2')
+    #print(idx)
+    
+
 
     vmag = vmag[~idx]
     bmag = bmag[~idx]
@@ -74,7 +80,15 @@ def MAGIC_Field_CR(ra_pos, dec_pos):
     ra = ra[~idx]
     dec = dec[~idx]
 
-    print(bmag)  
+    #print('bmag2')
+    #print(bmag)  
+    #print(bmag.size)
+    
+    if bmag.size == 0 or vmag.size == 0:
+        #print('in if')
+        data=np.array([ra_pos, dec_pos, 0, 0, 0,0,0,0])
+        #data = data.transpose
+        return data
 
     #Start of section 4 in Jupyter notebook 
     #collect spectral type, V magnitude information for each star
@@ -144,7 +158,8 @@ def MAGIC_Field_CR(ra_pos, dec_pos):
     #plt.plot(star_temp,cr1,'.')
     #plt.show()      
     #Summed total count rates over field in both bands, as well as max local CRs in field in both bands
-    print(cr1)
+    #print('cr1')
+    #print(cr1)
     tot_cr1 = np.nansum(cr1)
     tot_cr2 = np.nansum(cr2)
     
